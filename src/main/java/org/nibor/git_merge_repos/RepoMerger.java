@@ -69,9 +69,10 @@ public class RepoMerger {
 							+ config.getRemoteName() + "/*");
 			RefSpec tagsSpec = new RefSpec("refs/tags/*:refs/tags/original/"
 					+ config.getRemoteName() + "/*");
-			Git git = new Git(repository);
-			git.fetch().setRemote(config.getFetchUri().toPrivateString())
-					.setRefSpecs(branchesSpec, tagsSpec).call();
+			try (Git git = new Git(repository)) {
+				git.fetch().setRemote(config.getFetchUri().toPrivateString())
+						.setRefSpecs(branchesSpec, tagsSpec).call();
+			}
 		}
 	}
 
@@ -112,10 +113,11 @@ public class RepoMerger {
 	}
 
 	private void resetToBranch() throws IOException, GitAPIException {
-		Ref master = repository.getRef(Constants.R_HEADS + "master");
+		Ref master = repository.exactRef(Constants.R_HEADS + "master");
 		if (master != null) {
-			Git git = new Git(repository);
-			git.reset().setMode(ResetType.HARD).setRef(master.getName()).call();
+			try (Git git = new Git(repository)) {
+				git.reset().setMode(ResetType.HARD).setRef(master.getName()).call();
+			}
 		}
 	}
 

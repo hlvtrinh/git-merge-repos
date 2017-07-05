@@ -2,6 +2,8 @@ package org.nibor.git_merge_repos;
 
 import java.util.Collection;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Info about a merged branch/tag and in which input repositories it was
  * present/missing.
@@ -54,6 +56,9 @@ public class MergedRef {
 		for (SubtreeConfig config : configs) {
 			builder.append("\n\t");
 			builder.append(config.getRemoteName());
+			if (StringUtils.isNotBlank(config.getSubtreeDirectory())) {
+				builder.append("\\").append(config.getSubtreeDirectory());
+			}
 		}
 	}
 }
