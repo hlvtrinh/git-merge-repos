@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,9 +47,8 @@ public class Main {
 		mergeItems.parallelStream().forEach(mergeItem -> {
 			try {
 				mergeReposFolders(mergeItem);
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (GitAPIException e) {
+			} catch (Exception e) {
+				printOut("[%s] Exception:", mergeItem.getTargetRepo());
 				e.printStackTrace();
 			}
 		});
@@ -83,7 +83,7 @@ public class Main {
 		long end = System.currentTimeMillis();
 
 		long timeMs = (end - start);
-		printIncompleteRefs(mergedRefs);
+		printIncompleteRefs(mergeItem.getTargetRepo(), mergedRefs);
 		printOut("[%s]Merged repository: '%s' has done, took %sms",
 				mergeItem.getTargetRepo(), outputPath, String.valueOf(timeMs));
 	}
@@ -93,26 +93,35 @@ public class Main {
 		List<String> folders = repo.getFolders();
 		if (CollectionUtils.isEmpty(folders)) {
 			System.err.println(String.format("[%s]Repo %s has no folder",
-					mergeItem.getTargetRepo(), repo.getRepoName()));
+					mergeItem.getTargetRepo(), repo.getRepo()));
 			return;
 		} else {
 			repo.getFolders().parallelStream().forEach(folder -> {
 				SubtreeConfig config;
 				try {
+					URL url;
+					try {
+						url = new URL(repo.getRepo());
+					} catch (MalformedURLException e) {
+						url = new File(repo.getRepo()).toURI().toURL();
+					}
+
 					config = new SubtreeConfig(folder,
-							new URIish(new File(repo.getRepoName()).toURI().toURL()));
+							new URIish(url));
 					subtreeConfigs.add(config);
-				} catch (MalformedURLException e) {
+				} catch (Exception e) {
+					printOut("[%s] Exception at repo '%s':", mergeItem.getTargetRepo(),
+							repo.getRepo());
 					e.printStackTrace();
 				}
 			});
 		}
 	}
 
-	private static void printIncompleteRefs(List<MergedRef> mergedRefs) {
+	private static void printIncompleteRefs(String targetRepo, List<MergedRef> mergedRefs) {
 		for (MergedRef mergedRef : mergedRefs) {
 			if (!mergedRef.getConfigsWithoutRef().isEmpty()) {
-				printOut("[%s]%s '%s' was not in: %s", mergedRef.getRefType(),
+				printOut("[%s]%s '%s' was not in: %s", targetRepo, mergedRef.getRefType(),
 						mergedRef.getRefName(), join(mergedRef.getConfigsWithoutRef()));
 			}
 		}
@@ -134,7 +143,7 @@ public class Main {
 		System.exit(64);
 	}
 
-	private static void printOut(String format, Object... args) {
+	private synchronized static void printOut(String format, Object... args) {
 		System.out.println(String.format(format, args));
 	}
 }

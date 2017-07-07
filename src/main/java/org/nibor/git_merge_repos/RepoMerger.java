@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -44,7 +43,7 @@ public class RepoMerger {
 			List<SubtreeConfig> subtreeConfigs) throws IOException {
 		this.subtreeConfigs = subtreeConfigs;
 		File file = new File(outputRepositoryPath);
-		repository = new RepositoryBuilder().setWorkTree(file).build();
+		repository = new RepositoryBuilder().setGitDir(file).setBare().build();
 		if (!repository.getDirectory().exists()) {
 			repository.create();
 		}
@@ -58,7 +57,7 @@ public class RepoMerger {
 		mergedRefs.addAll(mergedBranches);
 		mergedRefs.addAll(mergedTags);
 		deleteOriginalRefs();
-		resetToBranch();
+		// resetToBranch();
 		return mergedRefs;
 	}
 
@@ -108,15 +107,6 @@ public class RepoMerger {
 				RefUpdate refUpdate = repository.updateRef(originalRef.getName());
 				refUpdate.setForceUpdate(true);
 				refUpdate.delete(revWalk);
-			}
-		}
-	}
-
-	private void resetToBranch() throws IOException, GitAPIException {
-		Ref master = repository.exactRef(Constants.R_HEADS + "master");
-		if (master != null) {
-			try (Git git = new Git(repository)) {
-				git.reset().setMode(ResetType.HARD).setRef(master.getName()).call();
 			}
 		}
 	}

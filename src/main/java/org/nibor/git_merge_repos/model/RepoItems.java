@@ -3,7 +3,7 @@ package org.nibor.git_merge_repos.model;
 import java.util.List;
 
 public class RepoItems {
-	private String repoName;
+	private String repo;
 	private List<String> folders;
 
 	public List<String> getFolders() {
@@ -14,11 +14,11 @@ public class RepoItems {
 		this.folders = folders;
 	}
 
-	public String getRepoName() {
-		return repoName;
+	public String getRepo() {
+		return repo;
 	}
 
-	public void setRepoName(String repoName) {
-		this.repoName = repoName;
+	public void setRepo(String repo) {
+		this.repo = repo;
 	}
 }
